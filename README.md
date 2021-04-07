@@ -3,8 +3,9 @@ _the best opening is horse_
 
 ## Content
 1. Introduction
-2. Installation
-3. Config
+2. Functions
+3. Installation
+4. Roadmap
 
 ## Introduction
 CheddarShredder is a python based iterative alpha beta search based chess engine. It can run in a terminal or in any UCI compatible chess GUI.
