@@ -15,49 +15,23 @@ def get_move_score(e):
 
 def get_ai_move(max_depth):
     # copy the board and generate all legal moves
-    temp_board = board.copy()
-    moves = temp_board.legal_moves
+    moves = board.legal_moves
 
-    # create an array to hold move-score objects
-    moves_evaluated = []
-    for legal_move in moves:
-        moves_evaluated.append({"move": legal_move, "score": 0})
+    # init best move variables
+    current_best_score = get_infinity()
+    current_best_move = None
 
-    # init array to hold the next iterations scores
-    temp_evaluations = []
+    for current_move in moves:
+        board.push(current_move)
 
-    # iterative deepening start
-    for current_depth in range(max_depth):
+        score = evaluate_board(board, max_depth, get_negative_infinity(), get_infinity())
+        if score < current_best_score:
+            current_best_score = score
+            current_best_move = current_move
 
-        # remove scored moves from temp array
-        temp_evaluations.clear()
+        board.pop()
 
-        # go through ordered legal moves and evaluate with increasing depth
-        for current_move in moves_evaluated:
-
-            # get actual move from list
-            legal_move = current_move["move"]
-            # make test move
-            temp_board.push(legal_move)
-
-            # calculate move evaluation and save result
-            if temp_board.turn == chess.WHITE:
-                score = evaluate_board(temp_board, current_depth, get_negative_infinity(), get_infinity(), True)
-            else:
-                score = evaluate_board(temp_board, current_depth, get_negative_infinity(), get_infinity(), False)
-
-            temp_evaluations.append({"move": legal_move, "score": score})
-
-            # undo move
-            temp_board.pop()
-
-        # sort move list to increase alpha beta prune efficiency
-        moves_evaluated.clear()
-        moves_evaluated = temp_evaluations.copy()
-
-        moves_evaluated.sort(key=get_move_score)
-
-    return moves_evaluated
+    return current_best_move
 
 
 while 1:
@@ -81,7 +55,7 @@ while 1:
             sys.stdout.flush()
 
         if line == 'ucinewgame':
-            board.reset_board()
+            board.reset()
 
         if line == 'isready':
             sys.stdout.write('readyok\n')
@@ -106,7 +80,7 @@ while 1:
 
             white_time = -1
             black_time = -1
-            time_check = 99999
+            time_check = 99999999
 
             # parse gamestate
             if ' ' in line:
@@ -132,21 +106,22 @@ while 1:
                 if board.turn == chess.BLACK:
                     time_check = black_time / 1000
 
+            if time_check != 99999999:
                 # lower at...
-                if time_check > 300:    # if over 5, play at top level
+                if time_check > 480:    # if over 4 minutes, play at top level
+                    ai_level = 5
+                if time_check <= 240:   # 4 minutes
                     ai_level = 4
-                if time_check <= 300:   # 5 minutes
+                if time_check <= 120:   # 2 minutes
                     ai_level = 3
                 if time_check <= 60:    # 1 minute
                     ai_level = 2
-                if time_check <= 10:    # 10 seconds
+                if time_check <= 20:    # 20 seconds
                     ai_level = 1
 
             move = get_ai_move(ai_level)
-            if board.turn == chess.WHITE:
-                sys.stdout.write(f'bestmove {move[-1]["move"]}\n')
-            else:
-                sys.stdout.write(f'bestmove {move[0]["move"]}\n')
+
+            sys.stdout.write(f'bestmove {move}\n')
             sys.stdout.flush()
 
         if line == 'quit':

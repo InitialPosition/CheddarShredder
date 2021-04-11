@@ -4,7 +4,7 @@ from enum import Enum
 from os import system, name as os_name
 
 from AI import Evaluation
-from AI.Evaluation import get_negative_infinity, get_infinity, get_positional_value_for_piece, order_moves
+from AI.Evaluation import get_negative_infinity, get_infinity
 
 
 def clear_screen():
@@ -13,50 +13,50 @@ def clear_screen():
 
 def get_ai_move(max_depth):
     # copy the board and generate all legal moves
-    temp_board = board.copy()
-    moves = temp_board.legal_moves
+    moves = board.legal_moves
 
-    # create an array to hold move-score objects
-    moves_evaluated = []
-    for legal_move in moves:
-        moves_evaluated.append({"move": legal_move, "score": 0})
-
-    # init array to hold the next iterations scores
-    temp_evaluations = []
+    # init best move variables
+    current_best_score = get_infinity()
+    current_best_move = None
 
     # iterative deepening start
-    for current_depth in range(max_depth):
+#    for current_depth in range(max_depth):
+#        print(f'---- DEPTH {current_depth + 1} ----')
+#
+#        # go through legal moves and evaluate with increasing depth
+#        for current_move in moves:
+#
+#            # make test move
+#            temp_board.push(current_move)
+#
+#            # calculate move evaluation and save result
+#            score = Evaluation.evaluate_board(temp_board, current_depth, get_negative_infinity(), get_infinity())
+#
+#            print(f'Move {current_move} evaluated as {score}')
+#
+#            # if new move is better than saved move, overwrite
+#            if score > current_best_score:
+#                current_best_score = score
+#                current_best_move = current_move
+#
+#                print(f'New best move: {current_best_move}, Eval: {current_best_score}')
+#
+#            # undo move
+#            temp_board.pop()
 
-        # remove scored moves from temp array
-        temp_evaluations.clear()
+    for move in moves:
+        board.push(move)
 
-        # go through ordered legal moves and evaluate with increasing depth
-        for current_move in moves_evaluated:
+        score = Evaluation.evaluate_board(board, max_depth, get_negative_infinity(), get_infinity())
+        if score < current_best_score:
+            current_best_score = score
+            current_best_move = move
 
-            # get actual move from list
-            legal_move = current_move["move"]
-            # make test move
-            temp_board.push(legal_move)
+            print(f'New best move: {current_best_move}, Eval: {current_best_score}')
 
-            # calculate move evaluation and save result
-            if temp_board.turn == chess.WHITE:
-                score = Evaluation.evaluate_board(temp_board, current_depth, get_negative_infinity(), get_infinity(), True)
-            else:
-                score = Evaluation.evaluate_board(temp_board, current_depth, get_negative_infinity(), get_infinity(), False)
+        board.pop()
 
-            temp_evaluations.append({"move": legal_move, "score": score})
-
-            # undo move
-            temp_board.pop()
-
-        # sort move list to increase alpha beta prune efficiency
-        moves_evaluated.clear()
-        moves_evaluated = temp_evaluations.copy()
-
-        moves_evaluated.sort(key=get_move_score)
-
-    print(f'Suggested move: {moves_evaluated[-1]["move"]} (Evaluation: {moves_evaluated[-1]["score"]})')
-    return moves_evaluated
+    return current_best_move
 
 
 def get_move_score(e):
@@ -93,7 +93,7 @@ while board.is_game_over() is False:
     player_move_str = None
     player_move = None
     if board.turn == human_player:
-        while player_move not in board.pseudo_legal_moves:
+        while player_move not in board.legal_moves:
             player_move_str = input('Move: ')
             player_move_str = player_move_str.lower()
             player_move = chess.Move(from_square=chess.parse_square(player_move_str[:2]),
@@ -102,12 +102,9 @@ while board.is_game_over() is False:
         # at this point we have a valid user move string
         board.push(player_move)
     else:
-        ai_move = get_ai_move(5)
-        if board.turn == chess.WHITE:
-            board.push(ai_move[-1]["move"])
-        else:
-            board.push(ai_move[0]["move"])
+        ai_move = get_ai_move(2)
+        board.push(ai_move)
 
-clear_screen()
+#clear_screen()
 print(board)
 print(board.result())
