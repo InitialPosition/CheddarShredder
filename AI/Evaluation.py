@@ -166,7 +166,6 @@ piece_values = {
     chess.PAWN: 100
 }
 
-
 def is_endgame(board):
     # endgame is (very oversimplified) defined as:
     # - neither side has a queen OR

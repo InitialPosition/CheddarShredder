@@ -3,6 +3,8 @@
 import sys
 import chess
 from AI.Evaluation import evaluate_board, get_negative_infinity, get_infinity
+from random import choice
+import multiprocessing
 
 
 board = chess.Board()
@@ -15,23 +17,33 @@ def get_move_score(e):
 
 def get_ai_move(max_depth):
     # copy the board and generate all legal moves
-    moves = board.legal_moves
+    local_board = board.copy()
+    moves = local_board.legal_moves
 
     # init best move variables
     current_best_score = get_infinity()
     current_best_move = None
+    
+    scored_moves = {}
 
     for current_move in moves:
-        board.push(current_move)
+        local_board.push(current_move)
 
-        score = evaluate_board(board, max_depth, get_negative_infinity(), get_infinity())
+        score = evaluate_board(local_board, max_depth, get_negative_infinity(), get_infinity())
         if score < current_best_score:
             current_best_score = score
-            current_best_move = current_move
 
-        board.pop()
+        local_board.pop()
+        
+        scored_moves.update({current_move: score})
+    
+    best_moves = []
+    
+    for move in scored_moves:
+        if scored_moves[move] == current_best_score:
+            best_moves.append(move)
 
-    return current_best_move
+    return choice(best_moves)
 
 
 while 1:
@@ -118,6 +130,18 @@ while 1:
                     ai_level = 2
                 if time_check <= 20:    # 20 seconds
                     ai_level = 1
+
+            moves_depth_one = len(list(board.legal_moves))
+            move_reduction = 0
+
+            if moves_depth_one > 30:
+                move_reduction = 1
+            elif moves_depth_one > 40:
+                move_reduction = 2
+            elif moves_depth_one > 60:
+                move_reduction = 3
+
+            ai_level = max(1, ai_level - move_reduction)
 
             move = get_ai_move(ai_level)
 

@@ -1,5 +1,6 @@
 import chess
 from enum import Enum
+from threading import Thread
 
 from os import system, name as os_name
 
@@ -19,31 +20,6 @@ def get_ai_move(max_depth):
     current_best_score = get_infinity()
     current_best_move = None
 
-    # iterative deepening start
-#    for current_depth in range(max_depth):
-#        print(f'---- DEPTH {current_depth + 1} ----')
-#
-#        # go through legal moves and evaluate with increasing depth
-#        for current_move in moves:
-#
-#            # make test move
-#            temp_board.push(current_move)
-#
-#            # calculate move evaluation and save result
-#            score = Evaluation.evaluate_board(temp_board, current_depth, get_negative_infinity(), get_infinity())
-#
-#            print(f'Move {current_move} evaluated as {score}')
-#
-#            # if new move is better than saved move, overwrite
-#            if score > current_best_score:
-#                current_best_score = score
-#                current_best_move = current_move
-#
-#                print(f'New best move: {current_best_move}, Eval: {current_best_score}')
-#
-#            # undo move
-#            temp_board.pop()
-
     for move in moves:
         board.push(move)
 
@@ -56,7 +32,7 @@ def get_ai_move(max_depth):
 
         board.pop()
 
-    return current_best_move
+    return current_best_move, current_best_score
 
 
 def get_move_score(e):
@@ -102,9 +78,14 @@ while board.is_game_over() is False:
         # at this point we have a valid user move string
         board.push(player_move)
     else:
-        ai_move = get_ai_move(2)
+        threads = []
+        best_moves = []
+
+        for i in range(thread_count):
+            thread = Thread()
+            threads.append(thread)
+
         board.push(ai_move)
 
-#clear_screen()
 print(board)
 print(board.result())
